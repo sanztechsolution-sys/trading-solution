@@ -7,8 +7,14 @@ const prisma = new PrismaClient();
 
 // Middleware
 app.use(cors({
-  origin: ['https://trading-solution.vercel.app', 'http://localhost:5173'],
-  credentials: true
+  origin: [
+    'https://trading-solution.vercel.app', 
+    'https://trading-solution-beta.vercel.app',
+    'http://localhost:5173'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key']
 }));
 app.use(express.json());
 
