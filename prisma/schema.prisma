@@ -1,0 +1,126 @@
+// Prisma Schema for Trading Automation Platform
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User accounts
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  password      String
+  apiKey        String      @unique @default(cuid())
+  mt5Account    String?
+  mt5Server     String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  webhooks      Webhook[]
+  settings      Settings?
+  
+  @@map("users")
+}
+
+// Webhook configurations
+model Webhook {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  urlPath     String    @unique
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trades      Trade[]
+  logs        Log[]
+  
+  @@map("webhooks")
+}
+
+// Trade records
+model Trade {
+  id            String        @id @default(cuid())
+  webhookId     String
+  symbol        String
+  action        String        // "buy", "sell", "close"
+  orderType     String        @default("market") // "market", "limit"
+  entryPrice    Float
+  currentPrice  Float?
+  stopLoss      Float
+  status        String        @default("pending") // "pending", "active", "closed", "failed"
+  lotSize       Float
+  pnl           Float         @default(0)
+  commission    Float         @default(0)
+  swap          Float         @default(0)
+  openTime      DateTime      @default(now())
+  closeTime     DateTime?
+  mt5Ticket     String?
+  trailingActivation Float?
+  trailingDistance   Float?
+  trailingActive     Boolean   @default(false)
+  breakEvenMoved     Boolean   @default(false)
+  
+  webhook       Webhook       @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  takeProfits   TakeProfit[]
+  logs          Log[]
+  
+  @@map("trades")
+}
+
+// Take profit levels
+model TakeProfit {
+  id          String    @id @default(cuid())
+  tradeId     String
+  level       Int       // 1, 2, 3, etc.
+  price       Float
+  percentage  Float     // Percentage of position to close
+  executed    Boolean   @default(false)
+  executedAt  DateTime?
+  
+  trade       Trade     @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  
+  @@map("take_profits")
+}
+
+// Activity logs
+model Log {
+  id          String    @id @default(cuid())
+  webhookId   String?
+  tradeId     String?
+  action      String
+  level       String    @default("info") // "info", "warning", "error"
+  message     String
+  details     Json?
+  timestamp   DateTime  @default(now())
+  
+  webhook     Webhook?  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  trade       Trade?    @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  
+  @@map("logs")
+}
+
+// User settings
+model Settings {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  maxRiskPerTrade   Float     @default(2.0) // Percentage
+  dailyLossLimit    Float     @default(5.0) // Percentage
+  trailingEnabled   Boolean   @default(true)
+  autoTrading       Boolean   @default(true)
+  partialTpEnabled  Boolean   @default(true)
+  breakEvenEnabled  Boolean   @default(true)
+  maxOpenTrades     Int       @default(5)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("settings")
+}

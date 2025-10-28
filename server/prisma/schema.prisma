@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  webhooks     Webhook[]
+  trades       Trade[]
+  settings     UserSettings?
+}
+
+model UserSettings {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Risk Management
+  maxRiskPerTrade      Float    @default(2)
+  maxDailyLoss         Float    @default(5)
+  maxOpenTrades        Int      @default(5)
+  
+  // Notifications
+  emailNotifications   Boolean  @default(true)
+  tradeAlerts          Boolean  @default(true)
+  errorAlerts          Boolean  @default(true)
+  dailyReport          Boolean  @default(false)
+  
+  // Advanced
+  autoTrading          Boolean  @default(true)
+  trailingStop         Boolean  @default(true)
+  breakeven            Boolean  @default(true)
+  
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Webhook {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name             String
+  symbol           String?
+  description      String?
+  apiKey           String   @unique
+  isActive         Boolean  @default(true)
+  
+  signalsReceived  Int      @default(0)
+  lastSignalAt     DateTime?
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  signals          Signal[]
+  
+  @@index([userId])
+  @@index([apiKey])
+}
+
+model Signal {
+  id                  String   @id @default(cuid())
+  webhookId           String
+  webhook             Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  
+  action              String   // buy, sell, close
+  symbol              String
+  price               Float
+  stopLoss            Float?
+  takeProfits         Float[]
+  tpPercentages       Float[]
+  riskPercentage      Float    @default(2)
+  trailingActivation  Float?
+  trailingDistance    Float?
+  orderType           String   @default("market")
+  
+  status              String   @default("pending") // pending, processing, executed, failed
+  mt5Ticket           String?
+  error               String?
+  
+  receivedAt          DateTime
+  processedAt         DateTime?
+  createdAt           DateTime @default(now())
+  
+  @@index([webhookId])
+  @@index([status])
+  @@index([receivedAt])
+}
+
+model Trade {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  ticket      String   @unique
+  symbol      String
+  action      String   // buy, sell
+  
+  entryPrice  Float
+  exitPrice   Float?
+  lotSize     Float
+  
+  stopLoss    Float
+  takeProfit  Float?
+  
+  pnl         Float    @default(0)
+  
+  openTime    DateTime
+  closeTime   DateTime?
+  
+  status      String   @default("open") // open, closed, cancelled
+  
+  webhook     String?
+  signalId    String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@index([openTime])
+}
