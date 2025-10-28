@@ -30,12 +30,54 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// Auth routes
+app.post('/api/auth/register', (req, res) => {
+  console.log('Register attempt:', req.body);
+  res.json({ 
+    success: true, 
+    message: 'Registration successful',
+    user: { email: req.body.email },
+    token: 'demo-token-123'
+  });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  console.log('Login attempt:', req.body);
+  res.json({ 
+    success: true, 
+    message: 'Login successful',
+    user: { email: req.body.email },
+    token: 'demo-token-123'
+  });
+});
+
+// Webhook routes
+app.get('/api/webhooks', (req, res) => {
+  res.json({ 
+    success: true,
+    data: []
+  });
+});
+
 app.post('/api/webhook', (req, res) => {
   console.log('Webhook received:', req.body);
   res.json({ 
     success: true, 
     message: 'Webhook received',
     data: req.body 
+  });
+});
+
+// Dashboard stats
+app.get('/api/stats/dashboard', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      totalTrades: 0,
+      activeTrades: 0,
+      totalProfit: 0,
+      winRate: 0
+    }
   });
 });
 
