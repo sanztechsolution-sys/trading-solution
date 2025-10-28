@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: trading-backend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: postgresql://postgres:liCFGGmStYatlsRaJGAdEztQTHBkvnqo@shuttle.proxy.rlwy.net:16901/railway
+      - key: JWT_SECRET
+        value: your-secret-key-2024-render
