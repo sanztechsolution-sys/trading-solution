@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // Middleware
 app.use(cors({
   origin: [
-    'https://trading-solution.vercel.app', 
+    'https://trading-solution.vercel.app',
     'https://trading-solution-beta.vercel.app',
     'http://localhost:5173'
   ],
@@ -20,8 +20,8 @@ app.use(express.json());
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
     message: 'Trading Backend API is running!'
   });
@@ -29,7 +29,7 @@ app.get('/health', (req, res) => {
 
 // Basic API routes
 app.get('/api/status', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'active',
     version: '1.0.0',
     database: 'connected'
@@ -39,27 +39,39 @@ app.get('/api/status', (req, res) => {
 // Auth routes
 app.post('/api/auth/register', (req, res) => {
   console.log('Register attempt:', req.body);
-  res.json({ 
-    success: true, 
+  res.json({
+    success: true,
     message: 'Registration successful',
-    user: { email: req.body.email },
-    token: 'demo-token-123'
+    data: {
+      user: { 
+        id: '1',
+        email: req.body.email,
+        apiKey: 'sk_live_demo123456789'
+      },
+      token: 'demo-token-123'
+    }
   });
 });
 
 app.post('/api/auth/login', (req, res) => {
   console.log('Login attempt:', req.body);
-  res.json({ 
-    success: true, 
+  res.json({
+    success: true,
     message: 'Login successful',
-    user: { email: req.body.email },
-    token: 'demo-token-123'
+    data: {
+      user: { 
+        id: '1',
+        email: req.body.email,
+        apiKey: 'sk_live_demo123456789'
+      },
+      token: 'demo-token-123'
+    }
   });
 });
 
 // Webhook routes
 app.get('/api/webhooks', (req, res) => {
-  res.json({ 
+  res.json({
     success: true,
     data: []
   });
@@ -67,10 +79,10 @@ app.get('/api/webhooks', (req, res) => {
 
 app.post('/api/webhook', (req, res) => {
   console.log('Webhook received:', req.body);
-  res.json({ 
-    success: true, 
+  res.json({
+    success: true,
     message: 'Webhook received',
-    data: req.body 
+    data: req.body
   });
 });
 
